@@ -1,6 +1,5 @@
-
 import { motion } from "framer-motion";
-import { ArrowRight, MapPin, Package, Car, } from "lucide-react";
+import { ArrowRight, MapPin, Package, Car } from "lucide-react";
 import heroImage from "../../assets/images/hero.jpg";
 
 const Hero = () => {
@@ -10,16 +9,15 @@ const Hero = () => {
       <div className="max-w-[1400px] w-full grid lg:grid-cols-2 gap-16 items-center">
         {/* Left: Content */}
         <div className="flex flex-col gap-8 text-left">
-
-
           <h1 className="text-[clamp(3rem,8vw,7rem)] font-bold text-slate-950 leading-[0.9] tracking-tighter">
-            Travel <br />
-            <span className="text-purple-600">Smarter.</span>
+            Connect with Travelers <br />
+            <span className="text-purple-600">heading your way.</span>
           </h1>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-lg font-light leading-relaxed">
-            Padiman Route bridges the gap between travelers and cost-effective
-            logistics. Move smarter, earn faster, and join the network.
+            Padiman connects you with travelers already heading your way. Send
+            packages reliably, support local travelers, and move smarter
+            together.{" "}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
