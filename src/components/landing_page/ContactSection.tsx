@@ -45,7 +45,7 @@ export const ContactSection = () => {
 
         {/* CTA: Minimal, button-focused */}
         <div className="mt-24">
-          <button className="group flex items-center gap-4 text-xl font-bold bg-white text-black px-10 py-6 hover:bg-purple-600 hover:text-white transition-all duration-300">
+          <button className="group flex items-center gap-4 text-xl font-bold bg-white text-black px-10 py-6 hover:bg-[#9C2583] hover:text-white transition-all duration-300">
             Start a conversation
             <ArrowRight
               size={24}

@@ -11,7 +11,7 @@ const Hero = () => {
         <div className="flex flex-col gap-8 text-left">
           <h1 className="text-[clamp(3rem,8vw,7rem)] font-bold text-slate-950 leading-[0.9] tracking-tighter">
             Connect with Travelers <br />
-            <span className="text-purple-600">heading your way.</span>
+            <span className="text-[#9C2583]">heading your way.</span>
           </h1>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-lg font-light leading-relaxed">
@@ -21,7 +21,7 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <button className="bg-slate-950 text-white px-10 py-5 rounded-full font-bold hover:bg-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 text-lg">
+            <button className="bg-slate-950 text-white px-10 py-5 rounded-full font-bold hover:bg-[#9C2583] transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 text-lg">
               Get Started <ArrowRight size={20} />
             </button>
             <button className="bg-white border border-slate-200 text-slate-900 px-10 py-5 rounded-full font-bold hover:border-slate-300 transition-all text-lg">
@@ -70,7 +70,7 @@ const Hero = () => {
             key={i}
             className="group p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-purple-200 hover:shadow-lg transition-all cursor-pointer"
           >
-            <div className="w-14 h-14 rounded-2xl bg-white text-purple-600 flex items-center justify-center mb-6 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-white text-[#9C2583] flex items-center justify-center mb-6 group-hover:bg-[#9C2583] group-hover:text-white transition-all shadow-sm">
               {item.icon}
             </div>
             <h3 className="text-2xl font-bold text-slate-950 mb-2">

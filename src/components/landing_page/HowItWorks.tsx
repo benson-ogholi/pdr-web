@@ -9,7 +9,7 @@ import {
 
 export const ImpactSection = () => {
   return (
-    <section className="py-24 bg-black text-white selection:bg-purple-600">
+    <section className="py-24 bg-black text-white selection:bg-[#9C2583]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-20 items-center">
         <div>
           <motion.h2
@@ -28,7 +28,7 @@ export const ImpactSection = () => {
           </p>
 
           <div className="flex gap-6 items-center">
-            <button className="bg-purple-600 hover:bg-purple-500 text-white px-10 py-5 rounded-full text-lg font-semibold transition-transform hover:scale-105 active:scale-95">
+            <button className="bg-[#9C2583] hover:bg-purple-500 text-white px-10 py-5 rounded-full text-lg font-semibold transition-transform hover:scale-105 active:scale-95">
               Join the network
             </button>
             <div className="flex -space-x-4">

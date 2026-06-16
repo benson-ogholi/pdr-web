@@ -17,19 +17,19 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-8">
           <Link
             to="/faq"
-            className="text-sm font-medium text-black hover:text-purple-600 transition-colors uppercase tracking-widest"
+            className="text-sm font-medium text-black hover:text-[#9C2583] transition-colors uppercase tracking-widest"
           >
             FAQ
           </Link>
           <Link
             to="/privacy"
-            className="text-sm font-medium text-black hover:text-purple-600 transition-colors uppercase tracking-widest"
+            className="text-sm font-medium text-black hover:text-[#9C2583] transition-colors uppercase tracking-widest"
           >
             Privacy
           </Link>
           <Link
             to="/terms"
-            className="text-sm font-medium text-black hover:text-purple-600 transition-colors uppercase tracking-widest"
+            className="text-sm font-medium text-black hover:text-[#9C2583] transition-colors uppercase tracking-widest"
           >
             Terms
           </Link>
