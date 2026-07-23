@@ -2,13 +2,11 @@ import { useState } from "react";
 import { UsersView } from "./Views/UsersView";
 import { AdminLayout } from "./Layout/AdminLayout";
 import { DriversView } from "./Views/DriverApplicationsView";
-import { ParcelRequestsView } from "./Views/ParcelRequestsView";
-import { ParcelsView } from "./Views/ParcelsView";
-import { RideOffersView } from "./Views/RideOffersView";
 import { PaymentsView } from "./Views/PaymentsView";
 import { WithdrawalsView } from "./Views/WithdrawalsView";
 import { DashboardOverview } from "./Views/DashboardOverview";
 import { CommissionsView } from "./Views/CommissionsView";
+import { RequestsView } from "./Views/RequestsView";
 
 export const AdminDashboardRoot = () => {
   const [currentView, setView] = useState("overview");
@@ -27,22 +25,8 @@ export const AdminDashboardRoot = () => {
       case "driver-applications":
         return <DriversView />;
 
-      case "parcel-requests":
-        return <ParcelRequestsView />;
-
-      case "parcels":
-        return <ParcelsView />;
-
-      case "ride-offers":
-        return <RideOffersView />;
-
-      case "negotiations":
-        return (
-          <div className="text-sm text-zinc-500">
-            System price counters and escrow agreements view.
-          </div>
-        );
-
+      case "requests":
+        return <RequestsView />;
       case "payments":
         return <PaymentsView />;
       case "commissions":

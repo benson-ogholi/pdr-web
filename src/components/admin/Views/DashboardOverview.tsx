@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Users,
   Car,
-  Package,
   TrendingUp,
   DollarSign,
   Layers,
@@ -170,18 +169,6 @@ export const DashboardOverview = () => {
             color: "text-amber-600",
             alert: systemCounters.pendingDriverApplications > 0,
           },
-          {
-            label: "Logistics Requests",
-            val: systemCounters.parcelRequests,
-            icon: Package,
-            color: "text-teal-600",
-          },
-          {
-            label: "Active In-Transit",
-            val: systemCounters.activeShipmentsInTransit,
-            icon: TrendingUp,
-            color: "text-purple-600",
-          },
         ].map((c, i) => (
           <div
             key={i}
@@ -218,7 +205,7 @@ export const DashboardOverview = () => {
 
           {/* Core CSS Scaled Vector Path Simulation Map */}
           <div className="h-44 w-full flex items-end justify-between pt-4 relative group">
-            {charts.historicalThirtyDayRevenue.length === 0 ? (
+            {charts.historicalThirtyDayRevenue?.length === 0 ? (
               <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-400 italic">
                 Insufficient continuous time-series data to plot vector.
               </div>
@@ -332,50 +319,6 @@ export const DashboardOverview = () => {
           <p className="text-xs text-zinc-400 mt-0.5">
             Distribution allocation density across variable consignment states.
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
-          {charts.parcelDistributionPieChart.length === 0 ? (
-            <div className="col-span-4 text-center py-6 text-xs text-zinc-400 italic">
-              No active logistics segments found.
-            </div>
-          ) : (
-            charts.parcelDistributionPieChart.map((p, index) => {
-              const totalItems = charts.parcelDistributionPieChart.reduce(
-                (a, b) => a + b.count,
-                0
-              );
-              const segmentPercentage =
-                totalItems > 0
-                  ? ((p.count / totalItems) * 100).toFixed(1)
-                  : "0";
-
-              return (
-                <div
-                  key={index}
-                  className="bg-zinc-50/50 border border-zinc-100 p-4 rounded-xl space-y-3"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-600 truncate mr-2">
-                      {p.status}
-                    </span>
-                    <span className="text-xs font-mono font-black text-zinc-900 bg-white shadow-sm border px-2 py-0.5 rounded-md">
-                      {p.count}
-                    </span>
-                  </div>
-                  <div className="w-full bg-zinc-200/70 h-2 rounded-full overflow-hidden">
-                    <div
-                      style={{ width: `${segmentPercentage}%` }}
-                      className="bg-zinc-900 h-full rounded-full"
-                    />
-                  </div>
-                  <span className="text-[10px] font-medium text-zinc-400 block text-right">
-                    {segmentPercentage}% of framework weight
-                  </span>
-                </div>
-              );
-            })
-          )}
         </div>
       </div>
     </div>

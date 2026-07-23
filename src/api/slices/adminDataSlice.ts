@@ -17,11 +17,29 @@ interface PaginatedResponse<T> {
 // Fetch all collections with optional pagination parameters
 export const fetchAdminData = createAsyncThunk(
     'adminData/fetchAll',
-    async ({ collection, page = 1, limit = 10 }: { collection: string; page?: number; limit?: number }, { rejectWithValue }) => {
+    async (
+        { collection, page = 1, limit = 10, type, status }: {
+            collection: string;
+            page?: number;
+            limit?: number;
+            // Only relevant when collection === 'requests' — lets the admin
+            // UI slice the unified Request model by type
+            // (join-ride/offer-ride/send-package/deliver-package) or by
+            // lifecycle status (pending/assigned/in_progress/completed/
+            // confirmed/cancelled/expired).
+            type?: string;
+            status?: string;
+        },
+        { rejectWithValue }
+    ) => {
         try {
-            // collection corresponds to: 'users', 'parcel-requests', 'parcels', 'payments', 'ride-offers', 'negotiations', 'driver-applications', 'withdrawals', and 'commissions'
+            // collection corresponds to: 'users', 'requests', 'payments', 'negotiations', 'driver-applications', 'withdrawals', and 'commissions'
+            const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+            if (type) params.set('type', type);
+            if (status) params.set('status', status);
+
             const response = await axiosInstance.get<PaginatedResponse<any>>(
-                `/padiman_route/admin/data/${collection}?page=${page}&limit=${limit}`
+                `/padiman_route/admin/data/${collection}?${params.toString()}`
             );
             return { collection, responseData: response.data };
         } catch (err: any) {
@@ -92,10 +110,13 @@ export interface DashboardStats {
         users: number;
         activeDrivers: number;
         pendingDriverApplications: number;
-        parcelRequests: number;
-        activeShipmentsInTransit: number;
-        rideOffers: number;
         negotiations: number;
+        // Unified Request counters (single schema for every request type:
+        // join-ride, offer-ride, send-package, deliver-package)
+        totalRequests: number;
+        activeRequestsInProgress: number;
+        requestsByType: Record<string, number>;
+        requestsByStatus: Record<string, number>;
     };
     financialSummaries: {
         grossVolumeInvoiced: number;
@@ -104,12 +125,16 @@ export interface DashboardStats {
         driverWalletBalancesEscrow: number;
         successfulPayoutsSettled: number;
         pendingPayoutsInQueue: number;
-        adminCommissionEarned: number; // --- ADDED FIELD FOR 15% PLATFORM REVENUE ---
+        adminCommissionEarned: number; // 15% platform revenue
         paymentBreakdownDistribution: any[];
+        totalWithdrawableBalances: number; // sum of wallet.withdrawableBalance across all drivers
+        escrowHeldEarnings: number; // earnings still locked pending Request confirmation
+        releasedEarnings: number; // earnings already cleared to balance
     };
     charts: {
         historicalThirtyDayRevenue: Array<{ date: string; revenue: number; volume: number }>;
-        parcelDistributionPieChart: Array<{ status: string; count: number }>;
+        requestStatusPieChart: Array<{ status: string; count: number }>;
+        requestTypePieChart: Array<{ type: string; count: number }>;
         negotiationComparisonMetrics: {
             successRatePercentage: number;
             totalNegotiationsCount: number;
@@ -120,14 +145,14 @@ export interface DashboardStats {
 
 interface AdminDataState {
     users: any[];
-    parcelRequests: any[];
-    parcels: any[];
+    // Unified Request collection — replaces the old separate
+    // parcelRequests / parcels / rideOffers arrays.
+    requests: any[];
     payments: any[];
-    rideOffers: any[];
     negotiations: any[];
     driverApplications: any[];
     withdrawals: any[];
-    commissions: any[]; // --- ADDED FIELD FOR PERSISTED COMMISSIONS ---
+    commissions: any[];
     stats: DashboardStats | null;
     pagination: {
         [key: string]: { total: number; page: number; count: number };
@@ -140,14 +165,12 @@ interface AdminDataState {
 
 const initialState: AdminDataState = {
     users: [],
-    parcelRequests: [],
-    parcels: [],
+    requests: [],
     payments: [],
-    rideOffers: [],
     negotiations: [],
     driverApplications: [],
     withdrawals: [],
-    commissions: [], // --- ADDED INITIAL STATE FIELD ---
+    commissions: [],
     stats: null,
     pagination: {},
     loading: false,
@@ -181,14 +204,12 @@ const adminDataSlice = createSlice({
 
                 // Dynamically store data records directly inside their assigned collections
                 if (collection === 'users') state.users = responseData.data;
-                else if (collection === 'parcel-requests') state.parcelRequests = responseData.data;
-                else if (collection === 'parcels') state.parcels = responseData.data;
+                else if (collection === 'requests') state.requests = responseData.data;
                 else if (collection === 'payments') state.payments = responseData.data;
-                else if (collection === 'ride-offers') state.rideOffers = responseData.data;
                 else if (collection === 'negotiations') state.negotiations = responseData.data;
                 else if (collection === 'driver-applications') state.driverApplications = responseData.data;
                 else if (collection === 'withdrawals') state.withdrawals = responseData.data;
-                else if (collection === 'commissions') state.commissions = responseData.data; // --- ADDED DIRECT DYNAMIC ASSET ROUTING ---
+                else if (collection === 'commissions') state.commissions = responseData.data;
 
                 // Capture and update corresponding metadata pagination fields
                 state.pagination[collection] = {

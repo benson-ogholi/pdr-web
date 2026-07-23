@@ -3,8 +3,6 @@ import { useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
-  FileText,
-  Package,
   CreditCard,
   Car,
   Handshake,
@@ -38,10 +36,7 @@ export const AdminLayout = ({
     { id: "overview", label: "Overview", icon: ShieldCheck },
     { id: "users", label: "Users List", icon: Users },
     { id: "driver-applications", label: "Driver Requests", icon: Car },
-    { id: "parcel-requests", label: "Send a Parcel Requests", icon: FileText },
-    { id: "parcels", label: "Deliver a Parcel Requests", icon: Package },
-    { id: "ride-offers", label: "Active Ride Offers", icon: Car },
-    { id: "negotiations", label: "Negotiations", icon: Handshake },
+    { id: "requests", label: "Requests", icon: Handshake },
     { id: "payments", label: "Payments", icon: CreditCard },
     { id: "withdrawals", label: "Withdrawals Queue", icon: Banknote },
     { id: "commissions", label: "Platform Commissions", icon: Percent }, // --- ADDED LEDGER MENU ITEM ---
