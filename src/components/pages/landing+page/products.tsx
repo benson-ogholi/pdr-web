@@ -130,7 +130,7 @@ const products: Product[] = [
     name: "Watalopia",
     category: "Cooperative Savings Platform",
     description:
-      "A digital take on the traditional thrift cooperative ('ajo'/'esusu'). Members pool contributions into a shared treasury, earn quarterly cash yields, and can access flexible micro-credit against their savings.",
+      "A digital take on the traditional thrift cooperative. Members pool contributions into a shared treasury, earn quarterly cash yields, and can access flexible micro-credit against their savings.",
     website: "https://www.watalopia.com",
     packageId: "com.watalopia.app",
     playStoreUrl:
