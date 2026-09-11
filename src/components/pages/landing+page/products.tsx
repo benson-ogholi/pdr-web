@@ -234,47 +234,8 @@ export default function ProductDirectory() {
 
               {/* Footer: identifiers, console, store + QR */}
               <div className="mt-6 space-y-3 border-t border-slate-100 pt-5">
-                {item.packageId && (
-                  <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3 font-mono text-xs">
-                    <div className="flex min-w-0 items-center gap-2 text-slate-500">
-                      <span className="shrink-0 text-slate-400">Package:</span>
-                      <span className="truncate font-semibold text-slate-700">
-                        {item.packageId}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleCopy(item.packageId!)}
-                      className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                      title="Copy package ID"
-                    >
-                      {copiedText === item.packageId ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                )}
+           
 
-                {item.consoleAppId && (
-                  <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 font-mono text-xs text-slate-500">
-                    <div className="flex items-center gap-2">
-                      <LayoutDashboard className="h-3.5 w-3.5 shrink-0" />
-                      <span>Console app ID: {item.consoleAppId}</span>
-                    </div>
-                    {item.consoleUrl && (
-                      <a
-                        href={item.consoleUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 whitespace-nowrap font-sans text-[10px] font-semibold text-slate-500 underline decoration-slate-300 hover:text-slate-800"
-                      >
-                        Dashboard (admin){" "}
-                        <ExternalLink className="h-2.5 w-2.5" />
-                      </a>
-                    )}
-                  </div>
-                )}
 
                 {/* Website */}
                 <a
