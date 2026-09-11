@@ -17,6 +17,7 @@ import PrivacyPolicyPage from "./components/pages/landing+page/PrivacyPolicy";
 import FaqSection from "./components/pages/landing+page/Faq";
 import { AdminLogin } from "./components/admin/AdminLogin";
 import { AdminDashboardRoot } from "./components/admin/AdminDashboardRoot";
+import ProductDirectory from "./components/pages/landing+page/products";
 
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -50,6 +51,7 @@ function App() {
                   <Route path="/faq" element={<FaqSection />} />
                   <Route path="/privacy" element={<PrivacyPolicyPage />} />
                   <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/products" element={<ProductDirectory />} />
                 </Routes>
               </main>
               <Footer />
