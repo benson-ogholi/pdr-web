@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Truck,
   Wrench,
@@ -6,9 +6,7 @@ import {
   Smartphone,
   ExternalLink,
   CheckCircle2,
-  Copy,
   Sparkles,
-  LayoutDashboard,
   QrCode,
 } from "lucide-react";
 
@@ -152,13 +150,6 @@ const products: Product[] = [
 ];
 
 export default function ProductDirectory() {
-  const [copiedText, setCopiedText] = useState<string | null>(null);
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(text);
-    setTimeout(() => setCopiedText(null), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-white p-4 text-slate-900 sm:p-8">
