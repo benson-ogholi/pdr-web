@@ -164,13 +164,13 @@ export default function ProductDirectory() {
     <div className="min-h-screen bg-white p-4 text-slate-900 sm:p-8">
       <div className="mx-auto max-w-7xl space-y-10">
         {/* Header */}
-        <header className="space-y-3 border-b border-slate-100 pb-8 text-center sm:text-left">
+        <header className="space-y-3 mt-24 border-b border-slate-100 pb-8 text-center sm:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" /> App Ecosystem
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Apps
             Overview
           </div>
           <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
-            Product Directory
+            Products
           </h1>
           <p className="max-w-2xl text-sm text-slate-500 sm:text-base">
             Every live and in-development app across the portfolio, with store
