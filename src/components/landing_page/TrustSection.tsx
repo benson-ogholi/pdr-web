@@ -1,61 +1,79 @@
-
 import { motion } from "framer-motion";
 import { ShieldCheck, Target, Users, Clock } from "lucide-react";
 
-export const TrustSection = () => {
-  const pillars = [
-    {
-      icon: <ShieldCheck size={24} strokeWidth={1.5} />,
-      title: "Verified Community",
-      desc: "Every driver and passenger is vetted for safety and security.",
-    },
-    {
-      icon: <Target size={24} strokeWidth={1.5} />,
-      title: "Precision Matching",
-      desc: "Our AI optimizes routes to ensure the fastest, most efficient travel.",
-    },
-    {
-      icon: <Users size={24} strokeWidth={1.5} />,
-      title: "Community First",
-      desc: "Building a network that benefits the traveler, not just the platform.",
-    },
-    {
-      icon: <Clock size={24} strokeWidth={1.5} />,
-      title: "Always Available",
-      desc: "Logistics that move at the speed of your life, 24/7.",
-    },
-  ];
+const pillars = [
+  {
+    icon: ShieldCheck,
+    title: "Verified community",
+    desc: "Every driver and passenger is vetted for safety and security.",
+  },
+  {
+    icon: Target,
+    title: "Precision matching",
+    desc: "Routes are matched automatically so trips connect the fastest, most efficient way.",
+  },
+  {
+    icon: Users,
+    title: "Community first",
+    desc: "Building a network that benefits the traveler, not just the platform.",
+  },
+  {
+    icon: Clock,
+    title: "Always available",
+    desc: "Logistics that move at the speed of your life, 24/7.",
+  },
+];
 
+export const TrustSection = () => {
   return (
-    <section className="py-24 bg-white">
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
-        {/* Section Header */}
-        <div className="mb-20">
-          <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-black mb-6">
-            Why Padiman
-          </h2>
-          <p className="text-5xl md:text-6xl font-bold text-black tracking-tighter max-w-2xl">
+    <section className="bg-white py-24 px-6 lg:px-12">
+      <div className="mx-auto max-w-6xl">
+        {/* Section header */}
+        <div className="mb-16 max-w-2xl sm:mb-20">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-[#F7F6F2] px-4 py-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#6D28D9]" />
+            <span className="text-[13px] font-medium text-[#161B22]/70">
+              Why Padiman
+            </span>
+          </div>
+          <h2 className="text-[36px] font-semibold leading-[1.15] tracking-tight text-[#161B22] sm:text-[46px]">
             Travel built on trust and efficiency.
-          </p>
+          </h2>
         </div>
 
-        {/* Pillars Grid: Removed cards/borders for a cleaner, editorial look */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {pillars.map((pillar, i) => (
-            <motion.div key={i} className="flex flex-col items-start">
-              <div className="text-black mb-8 p-3 bg-zinc-100 rounded-full">
-                {pillar.icon}
-              </div>
-              <h3 className="text-xl font-bold text-black mb-4 tracking-tight">
-                {pillar.title}
-              </h3>
-              <p className="text-zinc-500 leading-relaxed font-light">
-                {pillar.desc}
-              </p>
-            </motion.div>
-          ))}
+        {/* Pillars — kept borderless/editorial, recolored to the brand */}
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          {pillars.map((pillar, i) => {
+            const Icon = pillar.icon;
+            return (
+              <motion.div
+                key={pillar.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="flex flex-col items-start"
+              >
+                <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-full bg-[#6D28D9]/10">
+                  <Icon
+                    size={20}
+                    strokeWidth={1.8}
+                    className="text-[#6D28D9]"
+                  />
+                </div>
+                <h3 className="mb-3 text-[17px] font-semibold tracking-tight text-[#161B22]">
+                  {pillar.title}
+                </h3>
+                <p className="text-[14.5px] leading-relaxed text-[#161B22]/55">
+                  {pillar.desc}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 };
+
+export default TrustSection;

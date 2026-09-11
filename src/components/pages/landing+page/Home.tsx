@@ -1,15 +1,18 @@
-import { ContactSection } from "../../landing_page/ContactSection";
+import ContactSection from "../../landing_page/Contact";
+import DualActionSection from "../../landing_page/Dual";
 import HeroScreen from "../../landing_page/Hero";
-import { HowItWorks, ImpactSection } from "../../landing_page/HowItWorks";
-import { TrustSection } from "../../landing_page/TrustSection";
+import IntelligentWorkflow from "../../landing_page/HowItWorks";
+import Stats from "../../landing_page/Stats";
+import Testimonials from "../../landing_page/Testimonials";
 
 const Home = () => {
   return (
     <div>
       <HeroScreen />
-      <HowItWorks />
-      <ImpactSection />
-      <TrustSection />
+      <Stats />
+      <IntelligentWorkflow />
+      <Testimonials />
+      <DualActionSection />
       <ContactSection />
     </div>
   );
