@@ -1,8 +1,8 @@
 import axios from "axios";
 
-//export const baseURL = "https://kindred-server.onrender.com";
+export const baseURL = "https://kindred-server.onrender.com";
 
-export const baseURL = 'http://localhost:5005';
+//export const baseURL = 'http://localhost:5005';
 
 const axiosInstance = axios.create({
   baseURL: `${baseURL}/api/v1`,
