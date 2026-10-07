@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, ChangeEvent } from "react";
+import React, { useEffect, useState, useMemo, type ChangeEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Search,
