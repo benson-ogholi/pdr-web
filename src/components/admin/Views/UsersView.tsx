@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Search,
@@ -13,23 +13,48 @@ import {
   MapPin,
   Users,
   Car,
-  //SteeringWheel, // Using SteeringWheel as a clean icon indicator for drivers
 } from "lucide-react";
+
+// Replace these relative paths with your actual Redux store imports
 import type { AppDispatch, RootState } from "../../../api/store";
 import { fetchAdminData } from "../../../api/slices/adminDataSlice";
 
-// Categorized roles toggle interface schema
-type ViewRole = "users" | "drivers";
+// Explicit User Document Interface according to MongoDB/Mongoose Schema
+export interface SystemUser {
+  _id: string;
+  fullName?: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  occupation?: string;
+  gender?: string;
+  profileImage?: string;
+  isVerified?: boolean;
+  isDriver?: boolean;
+  isDriverPending?: boolean;
+  isDriverSuspended?: boolean;
+  createdAt?: string;
+}
 
-export const UsersView = () => {
+// System View Segmentation Role Types
+export type ViewRole = "users" | "drivers";
+
+// Summary Metrics Analytics Schema
+export interface MetricsSummary {
+  totalUsers: number;
+  totalDrivers: number;
+  totalStandard: number;
+}
+
+export const UsersView: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { users, loading, pagination } = useSelector(
     (state: RootState) => state.adminData
   );
 
-  // Pagination, Search, Role, and Timestamp filter states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
+  // Pagination, Search, Role, and Timestamp filter state declarations
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [activeRoleView, setActiveRoleView] = useState<ViewRole>("users");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedYear, setSelectedYear] = useState<string>("all");
@@ -39,10 +64,10 @@ export const UsersView = () => {
     dispatch(fetchAdminData({ collection: "users", page: currentPage, limit }));
   }, [dispatch, currentPage]);
 
-  // Derive dynamic account metric summary values directly out of your global pipeline state arrays
-  const metrics = useMemo(() => {
-    const rawList = users || [];
-    const driversCount = rawList.filter((u: any) => u.isDriver === true).length;
+  // Derive dynamic account metric summary values directly out of global state arrays
+  const metrics = useMemo<MetricsSummary>(() => {
+    const rawList: SystemUser[] = Array.isArray(users) ? users : [];
+    const driversCount = rawList.filter((u) => u.isDriver === true).length;
     const standardUsersCount = rawList.length - driversCount;
 
     return {
@@ -52,71 +77,92 @@ export const UsersView = () => {
     };
   }, [users]);
 
-  // Dynamically compile available years present inside the user collection metadata timestamps
-  const availableYears = useMemo(() => {
+  // Dynamically compile available years present inside user collection metadata timestamps
+  const availableYears = useMemo<string[]>(() => {
     if (!users || !Array.isArray(users)) return [];
     const yearsSet = new Set<string>();
-    users.forEach((user: any) => {
+
+    (users as SystemUser[]).forEach((user) => {
       if (user.createdAt) {
         const year = new Date(user.createdAt).getFullYear().toString();
         if (year && year !== "NaN") yearsSet.add(year);
       }
     });
+
     return Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
   }, [users]);
 
-  // Client-side multi-layer stream filtration matrix matching text queries, roles, and temporal parameters
-  const filteredUsers = (users || []).filter((user: any) => {
-    // 1. Role Context Filtration Toggle (Standard User vs Verified Driver)
-    if (activeRoleView === "drivers") {
-      if (user.isDriver !== true) return false;
-    } else {
-      // "users" role shows everyone or just non-drivers depending on preference. Here it shows all standard entries.
-      if (user.isDriver === true) return false;
-    }
+  // Multi-layer client filtration matrix matching text queries, roles, and temporal parameters
+  const filteredUsers = useMemo<SystemUser[]>(() => {
+    const rawList: SystemUser[] = Array.isArray(users) ? users : [];
 
-    // 2. Text Search fuzzy matching filters
-    if (searchTerm.trim() !== "") {
-      const query = searchTerm.toLowerCase().trim();
-      const matchName = user.fullName?.toLowerCase().includes(query);
-      const matchEmail = user.email?.toLowerCase().includes(query);
-      const matchPhone = user.phone?.includes(query);
-
-      if (!matchName && !matchEmail && !matchPhone) return false;
-    }
-
-    // 3. Month & Year Calendar Timeline filters
-    if (user.createdAt) {
-      const accountDate = new Date(user.createdAt);
-
-      if (selectedMonth !== "all") {
-        const recordMonth = accountDate.getMonth().toString();
-        if (recordMonth !== selectedMonth) return false;
+    return rawList.filter((user) => {
+      // 1. Role Context Filtration Toggle (Standard User vs Verified Driver)
+      if (activeRoleView === "drivers") {
+        if (user.isDriver !== true) return false;
+      } else {
+        if (user.isDriver === true) return false;
       }
 
-      if (selectedYear !== "all") {
-        const recordYear = accountDate.getFullYear().toString();
-        if (recordYear !== selectedYear) return false;
+      // 2. Text Search fuzzy matching filters
+      if (searchTerm.trim() !== "") {
+        const query = searchTerm.toLowerCase().trim();
+        const matchName = user.fullName?.toLowerCase().includes(query) ?? false;
+        const matchEmail = user.email?.toLowerCase().includes(query) ?? false;
+        const matchPhone = user.phone?.includes(query) ?? false;
+
+        if (!matchName && !matchEmail && !matchPhone) return false;
       }
-    } else if (selectedMonth !== "all" || selectedYear !== "all") {
-      return false;
-    }
 
-    return true;
-  });
+      // 3. Month & Year Calendar Timeline filters
+      if (user.createdAt) {
+        const accountDate = new Date(user.createdAt);
 
-  const totalPages = Math.ceil((pagination["users"]?.total || 0) / limit);
+        if (selectedMonth !== "all") {
+          const recordMonth = accountDate.getMonth().toString();
+          if (recordMonth !== selectedMonth) return false;
+        }
 
-  const handlePrevPage = () => {
+        if (selectedYear !== "all") {
+          const recordYear = accountDate.getFullYear().toString();
+          if (recordYear !== selectedYear) return false;
+        }
+      } else if (selectedMonth !== "all" || selectedYear !== "all") {
+        return false;
+      }
+
+      return true;
+    });
+  }, [users, activeRoleView, searchTerm, selectedMonth, selectedYear]);
+
+  const totalUsersCount = pagination?.["users"]?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(totalUsersCount / limit));
+
+  const handlePrevPage = (): void => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
 
-  const handleNextPage = () => {
+  const handleNextPage = (): void => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
-  const handleRoleViewChange = (role: ViewRole) => {
+  const handleRoleViewChange = (role: ViewRole): void => {
     setActiveRoleView(role);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleMonthChange = (e: ChangeEvent<HTMLSelectElement>): void => {
+    setSelectedMonth(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleYearChange = (e: ChangeEvent<HTMLSelectElement>): void => {
+    setSelectedYear(e.target.value);
     setCurrentPage(1);
   };
 
@@ -181,12 +227,9 @@ export const UsersView = () => {
             />
             <input
               type="text"
-              placeholder={`Search ${activeRoleView} by name, email, or phone number...`}
+              placeholder={`Search ${activeRoleView} by name, email, or phone...`}
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={handleSearchChange}
               className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-black focus:bg-white transition-all"
             />
           </div>
@@ -195,10 +238,7 @@ export const UsersView = () => {
           <div className="w-full md:w-40">
             <select
               value={selectedMonth}
-              onChange={(e) => {
-                setSelectedMonth(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={handleMonthChange}
               className="w-full px-3 py-2.5 text-sm bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:bg-white text-zinc-700 transition-all cursor-pointer"
             >
               <option value="all">All Months</option>
@@ -221,10 +261,7 @@ export const UsersView = () => {
           <div className="w-full md:w-32">
             <select
               value={selectedYear}
-              onChange={(e) => {
-                setSelectedYear(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={handleYearChange}
               className="w-full px-3 py-2.5 text-sm bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:bg-white text-zinc-700 transition-all cursor-pointer"
             >
               <option value="all">All Years</option>
@@ -242,6 +279,7 @@ export const UsersView = () => {
           {/* User vs Driver Core Dynamic Content View Toggle */}
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200">
             <button
+              type="button"
               onClick={() => handleRoleViewChange("users")}
               className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
                 activeRoleView === "users"
@@ -252,6 +290,7 @@ export const UsersView = () => {
               Customers View
             </button>
             <button
+              type="button"
               onClick={() => handleRoleViewChange("drivers")}
               className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
                 activeRoleView === "drivers"
@@ -263,7 +302,10 @@ export const UsersView = () => {
             </button>
           </div>
 
-          <button className="flex items-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
+          <button
+            type="button"
+            className="flex items-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors"
+          >
             <SlidersHorizontal size={16} />
             Filter Status
           </button>
@@ -284,8 +326,7 @@ export const UsersView = () => {
             No matching registries found
           </p>
           <p className="text-sm text-zinc-400">
-            Try adjusting your role switches, keyword configurations, or date
-            ranges.
+            Try adjusting your role switches, search keywords, or date filters.
           </p>
         </div>
       ) : (
@@ -308,9 +349,6 @@ export const UsersView = () => {
                     <th scope="col" className="pb-4 font-semibold">
                       Platform Access Level
                     </th>
-                    {/* <th scope="col" className="pb-4 font-semibold text-right">
-                      Actions
-                    </th> */}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 whitespace-nowrap">
@@ -326,16 +364,21 @@ export const UsersView = () => {
                             {user.profileImage ? (
                               <img
                                 src={user.profileImage}
-                                alt={user.fullName}
+                                alt={user.fullName || "User Avatar"}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Fallback if image fails to load
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
                               />
                             ) : (
-                              user.fullName?.charAt(0)
+                              user.fullName?.charAt(0) || "U"
                             )}
                           </div>
                           <div>
                             <div className="font-bold text-zinc-900 flex items-center gap-1.5">
-                              {user.fullName}
+                              {user.fullName || "Unnamed User"}
                               {user.isVerified && (
                                 <UserCheck
                                   size={14}
@@ -359,7 +402,7 @@ export const UsersView = () => {
                           </div>
                           <div className="flex items-center gap-1.5 text-zinc-600 text-xs font-medium">
                             <Phone size={12} className="text-zinc-400" />{" "}
-                            {user.phone}
+                            {user.phone || "No Phone Number"}
                           </div>
                         </div>
                       </td>
@@ -407,13 +450,6 @@ export const UsersView = () => {
                           )}
                         </div>
                       </td>
-
-                      {/* Column 5: Action Triggers */}
-                      {/* <td className="py-4 pl-4 text-right">
-                        <button className="text-xs font-bold bg-zinc-100 text-zinc-800 hover:bg-black hover:text-white px-3 py-1.5 rounded-md transition-all">
-                          Manage Account
-                        </button>
-                      </td> */}
                     </tr>
                   ))}
                 </tbody>
@@ -430,13 +466,14 @@ export const UsersView = () => {
               </span>{" "}
               entries this page out of{" "}
               <span className="text-black font-semibold">
-                {pagination["users"]?.total || 0}
+                {totalUsersCount}
               </span>{" "}
               system accounts.
             </p>
 
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 disabled={currentPage === 1}
                 onClick={handlePrevPage}
                 className="p-1.5 border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-40 disabled:hover:bg-transparent transition-all"
@@ -445,10 +482,11 @@ export const UsersView = () => {
               </button>
 
               <span className="text-xs font-bold px-3 py-1.5 bg-zinc-100 border border-zinc-200 rounded-lg">
-                Page {currentPage} of {totalPages || 1}
+                Page {currentPage} of {totalPages}
               </span>
 
               <button
+                type="button"
                 disabled={currentPage === totalPages || totalPages === 0}
                 onClick={handleNextPage}
                 className="p-1.5 border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-40 disabled:hover:bg-transparent transition-all"

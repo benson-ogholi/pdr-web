@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Banknote,
   AlertTriangle,
-  Percent, // --- IMPORTED PERCENT ICON FOR PLATFORM REVENUE ---
+  Percent,
+  MapPin, // --- IMPORTED MAP PIN ICON FOR ADDRESS VERIFICATIONS ---
 } from "lucide-react";
 import type { AppDispatch } from "../../../api/store";
 import { logout } from "../../../api/slices/auth";
@@ -36,10 +37,15 @@ export const AdminLayout = ({
     { id: "overview", label: "Overview", icon: ShieldCheck },
     { id: "users", label: "Users List", icon: Users },
     { id: "driver-applications", label: "Driver Requests", icon: Car },
+    {
+      id: "address-verifications",
+      label: "Address Verifications",
+      icon: MapPin,
+    }, // --- ADDED ADDRESS VERIFICATIONS MENU ITEM ---
     { id: "requests", label: "Requests", icon: Handshake },
     { id: "payments", label: "Payments", icon: CreditCard },
     { id: "withdrawals", label: "Withdrawals Queue", icon: Banknote },
-    { id: "commissions", label: "Platform Commissions", icon: Percent }, // --- ADDED LEDGER MENU ITEM ---
+    { id: "commissions", label: "Platform Commissions", icon: Percent },
   ];
 
   const handleLogoutConfirm = () => {

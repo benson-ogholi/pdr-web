@@ -1,11 +1,13 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axiosInstance from '../axiosInstance';
+// ==========================================
+// adminDataSlice.ts - FULLY UPDATED VERSION
+// ==========================================
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axiosInstance from "../axiosInstance";
 
 // ==========================================
 // 1. ASYNC THUNKS (API REQUESTS)
 // ==========================================
 
-// Helper interface for paginated API responses
 interface PaginatedResponse<T> {
     success: boolean;
     count: number;
@@ -14,64 +16,129 @@ interface PaginatedResponse<T> {
     data: T[];
 }
 
-// Fetch all collections with optional pagination parameters
 export const fetchAdminData = createAsyncThunk(
-    'adminData/fetchAll',
+    "adminData/fetchAll",
     async (
-        { collection, page = 1, limit = 10, type, status }: {
+        {
+            collection,
+            page = 1,
+            limit = 10,
+            type,
+            status,
+        }: {
             collection: string;
             page?: number;
             limit?: number;
-            // Only relevant when collection === 'requests' — lets the admin
-            // UI slice the unified Request model by type
-            // (join-ride/offer-ride/send-package/deliver-package) or by
-            // lifecycle status (pending/assigned/in_progress/completed/
-            // confirmed/cancelled/expired).
             type?: string;
             status?: string;
         },
         { rejectWithValue }
     ) => {
         try {
-            // collection corresponds to: 'users', 'requests', 'payments', 'negotiations', 'driver-applications', 'withdrawals', and 'commissions'
-            const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-            if (type) params.set('type', type);
-            if (status) params.set('status', status);
+            const params = new URLSearchParams({
+                page: String(page),
+                limit: String(limit),
+            });
+            if (type) params.set("type", type);
+            if (status) params.set("status", status);
 
             const response = await axiosInstance.get<PaginatedResponse<any>>(
                 `/padiman_route/admin/data/${collection}?${params.toString()}`
             );
             return { collection, responseData: response.data };
         } catch (err: any) {
-            return rejectWithValue(err.response?.data?.message || `Failed to fetch ${collection}`);
+            return rejectWithValue(
+                err.response?.data?.message || `Failed to fetch ${collection}`
+            );
         }
     }
 );
 
-// Update Driver Application Status (Approve / Reject / Suspend)
-export const updateDriverStatus = createAsyncThunk(
-    'adminData/updateDriverStatus',
+// Dedicated GET Thunk for Address Verifications (now supports ?status= param)
+export const fetchAddressVerifications = createAsyncThunk(
+    "adminData/fetchAddressVerifications",
     async (
-        { id, status, rejectionReason }: { id: string; status: 'approved' | 'rejected' | 'suspended'; rejectionReason?: string },
+        { page = 1, limit = 10, status }: { page?: number; limit?: number; status?: string } = {},
+        { rejectWithValue }
+    ) => {
+        try {
+            const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+            if (status) params.set("status", status);
+
+            const response = await axiosInstance.get(
+                `/padiman_route/admin/data/address-verifications?${params.toString()}`
+            );
+            return response.data;
+        } catch (err: any) {
+            return rejectWithValue(
+                err.response?.data?.message || "Failed to fetch address verifications"
+            );
+        }
+    }
+);
+
+export const updateDriverStatus = createAsyncThunk(
+    "adminData/updateDriverStatus",
+    async (
+        {
+            id,
+            status,
+            rejectionReason,
+        }: {
+            id: string;
+            status: "approved" | "rejected" | "failed" | "suspended";
+            rejectionReason?: string;
+        },
         { rejectWithValue }
     ) => {
         try {
             const response = await axiosInstance.put(
-                `/padiman_route/admin/data/driver-applications/${id}/status`,
+                `/padiman_route/admin/data/driver-submissions/${id}/status`,
                 { status, rejectionReason }
             );
-            return response.data.data; // Returns updated application object
+            return response.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data?.message || 'Failed to update driver status');
+            return rejectWithValue(
+                err.response?.data?.message || "Failed to update driver status"
+            );
         }
     }
 );
 
-// Update Withdrawal Status (Approve / Reject)
-export const updateWithdrawalStatus = createAsyncThunk(
-    'adminData/updateWithdrawalStatus',
+export const updateAddressVerificationStatus = createAsyncThunk(
+    "adminData/updateAddressVerificationStatus",
     async (
-        { id, status }: { id: string; status: 'success' | 'failed' },
+        {
+            userId,
+            status,
+            rejectionReason,
+        }: {
+            userId: string;
+            status: "approved" | "rejected" | "failed";
+            rejectionReason?: string;
+        },
+        { rejectWithValue }
+    ) => {
+        try {
+            const response = await axiosInstance.put(
+                `/padiman_route/admin/data/address-verifications/${userId}/status`,
+                { status, rejectionReason }
+            );
+            // Fallback gracefully if backend returns response.data directly or response.data.data
+            return response.data.data || response.data;
+        } catch (err: any) {
+            return rejectWithValue(
+                err.response?.data?.message ||
+                "Failed to update address verification status"
+            );
+        }
+    }
+);
+
+export const updateWithdrawalStatus = createAsyncThunk(
+    "adminData/updateWithdrawalStatus",
+    async (
+        { id, status }: { id: string; status: "success" | "failed" },
         { rejectWithValue }
     ) => {
         try {
@@ -79,24 +146,27 @@ export const updateWithdrawalStatus = createAsyncThunk(
                 `/padiman_route/admin/data/withdrawals/${id}/status`,
                 { status }
             );
-            return response.data.data; // Returns updated sub-document withdrawal entry
+            return response.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data?.message || 'Failed to update withdrawal status');
+            return rejectWithValue(
+                err.response?.data?.message || "Failed to update withdrawal status"
+            );
         }
     }
 );
 
-// Fetch Admin Dashboard Comprehensive Statistics Matrices
 export const fetchDashboardStats = createAsyncThunk(
-    'adminData/fetchDashboardStats',
+    "adminData/fetchDashboardStats",
     async (_, { rejectWithValue }) => {
         try {
             const response = await axiosInstance.get(
-                '/padiman_route/admin/data/dashboard-statistics'
+                "/padiman_route/admin/data/dashboard-statistics"
             );
-            return response.data.data; // Returns aggregated statistical payloads 
+            return response.data.data;
         } catch (err: any) {
-            return rejectWithValue(err.response?.data?.message || 'Failed to fetch dashboard metrics');
+            return rejectWithValue(
+                err.response?.data?.message || "Failed to fetch dashboard metrics"
+            );
         }
     }
 );
@@ -109,10 +179,8 @@ export interface DashboardStats {
     systemCounters: {
         users: number;
         activeDrivers: number;
-        pendingDriverApplications: number;
+        pendingDriverSubmissions: number;
         negotiations: number;
-        // Unified Request counters (single schema for every request type:
-        // join-ride, offer-ride, send-package, deliver-package)
         totalRequests: number;
         activeRequestsInProgress: number;
         requestsByType: Record<string, number>;
@@ -125,16 +193,16 @@ export interface DashboardStats {
         driverWalletBalancesEscrow: number;
         successfulPayoutsSettled: number;
         pendingPayoutsInQueue: number;
-        adminCommissionEarned: number; // 15% platform revenue
+        adminCommissionEarned: number;
         paymentBreakdownDistribution: any[];
-        totalWithdrawableBalances: number; // sum of wallet.withdrawableBalance across all drivers
-        escrowHeldEarnings: number; // earnings still locked pending Request confirmation
-        releasedEarnings: number; // earnings already cleared to balance
+        totalWithdrawableBalances: number;
+        escrowHeldEarnings: number;
+        releasedEarnings: number;
     };
     charts: {
-        historicalThirtyDayRevenue: Array<{ date: string; revenue: number; volume: number }>;
-        requestStatusPieChart: Array<{ status: string; count: number }>;
-        requestTypePieChart: Array<{ type: string; count: number }>;
+        historicalThirtyDayRevenue: any[];
+        requestStatusPieChart: any[];
+        requestTypePieChart: any[];
         negotiationComparisonMetrics: {
             successRatePercentage: number;
             totalNegotiationsCount: number;
@@ -143,24 +211,27 @@ export interface DashboardStats {
     };
 }
 
+interface PaginationState {
+    total: number;
+    page: number;
+    count: number;
+}
+
 interface AdminDataState {
     users: any[];
-    // Unified Request collection — replaces the old separate
-    // parcelRequests / parcels / rideOffers arrays.
     requests: any[];
     payments: any[];
     negotiations: any[];
-    driverApplications: any[];
+    driverSubmissions: any[];
+    addressVerifications: any[];
     withdrawals: any[];
     commissions: any[];
-    stats: DashboardStats | null;
-    pagination: {
-        [key: string]: { total: number; page: number; count: number };
-    };
+    dashboardStats: DashboardStats | null;
     loading: boolean;
+    actionLoading: boolean;
     statsLoading: boolean;
     error: string | null;
-    actionLoading: boolean;
+    pagination: Record<string, PaginationState>;
 }
 
 const initialState: AdminDataState = {
@@ -168,32 +239,33 @@ const initialState: AdminDataState = {
     requests: [],
     payments: [],
     negotiations: [],
-    driverApplications: [],
+    driverSubmissions: [],
+    addressVerifications: [],
     withdrawals: [],
     commissions: [],
-    stats: null,
-    pagination: {},
+    dashboardStats: null,
     loading: false,
+    actionLoading: false,
     statsLoading: false,
     error: null,
-    actionLoading: false,
+    pagination: {},
 };
 
 // ==========================================
-// 3. SLICE CONFIGURATION
+// 3. REDUX SLICE CREATION & REDUCERS
 // ==========================================
 
 const adminDataSlice = createSlice({
-    name: 'adminData',
+    name: "adminData",
     initialState,
     reducers: {
-        clearAdminErrors: (state) => {
+        clearAdminError: (state) => {
             state.error = null;
         },
     },
     extraReducers: (builder) => {
         builder
-            // --- Fetching Pipeline Handles ---
+            // --- Fetch All Collections ---
             .addCase(fetchAdminData.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -202,66 +274,125 @@ const adminDataSlice = createSlice({
                 state.loading = false;
                 const { collection, responseData } = action.payload;
 
-                // Dynamically store data records directly inside their assigned collections
-                if (collection === 'users') state.users = responseData.data;
-                else if (collection === 'requests') state.requests = responseData.data;
-                else if (collection === 'payments') state.payments = responseData.data;
-                else if (collection === 'negotiations') state.negotiations = responseData.data;
-                else if (collection === 'driver-applications') state.driverApplications = responseData.data;
-                else if (collection === 'withdrawals') state.withdrawals = responseData.data;
-                else if (collection === 'commissions') state.commissions = responseData.data;
-
-                // Capture and update corresponding metadata pagination fields
                 state.pagination[collection] = {
                     total: responseData.total,
                     page: responseData.page,
                     count: responseData.count,
                 };
+
+                switch (collection) {
+                    case "users":
+                        state.users = responseData.data;
+                        break;
+                    case "requests":
+                        state.requests = responseData.data;
+                        break;
+                    case "payments":
+                        state.payments = responseData.data;
+                        break;
+                    case "negotiations":
+                        state.negotiations = responseData.data;
+                        break;
+                    case "driver-submissions":
+                        state.driverSubmissions = responseData.data;
+                        break;
+                    case "address-verifications":
+                        state.addressVerifications = responseData.data;
+                        break;
+                    case "withdrawals":
+                        state.withdrawals = responseData.data;
+                        break;
+                    case "commissions":
+                        state.commissions = responseData.data;
+                        break;
+                }
             })
             .addCase(fetchAdminData.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
 
-            // --- Driver Application Action Handling Pipeline ---
+            // --- Dedicated Fetch Address Verifications (now supports status filter) ---
+            .addCase(fetchAddressVerifications.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAddressVerifications.fulfilled, (state, action) => {
+                state.loading = false;
+                state.addressVerifications = action.payload.data;
+                state.pagination["address-verifications"] = {
+                    total: action.payload.total,
+                    page: action.payload.page,
+                    count: action.payload.count,
+                };
+            })
+            .addCase(fetchAddressVerifications.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+
+            // --- Update Driver Submission Status ---
             .addCase(updateDriverStatus.pending, (state) => {
                 state.actionLoading = true;
                 state.error = null;
             })
             .addCase(updateDriverStatus.fulfilled, (state, action) => {
                 state.actionLoading = false;
-                const updatedApp = action.payload;
-
-                // Find and update the record right within your existing driver applications array instantly 
-                const index = state.driverApplications.findIndex((app) => app._id === updatedApp._id);
-                if (index !== -1) {
-                    state.driverApplications[index] = updatedApp;
-                }
+                const updatedItem = action.payload;
+                state.driverSubmissions = state.driverSubmissions.map((item) =>
+                    item._id === updatedItem._id || item.user?._id === updatedItem._id
+                        ? { ...item, ...updatedItem }
+                        : item
+                );
             })
             .addCase(updateDriverStatus.rejected, (state, action) => {
                 state.actionLoading = false;
                 state.error = action.payload as string;
             })
 
-            // --- Withdrawal Status Handling Pipeline ---
+            // --- Update Address Verification Status ---
+            .addCase(updateAddressVerificationStatus.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+            })
+            .addCase(updateAddressVerificationStatus.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                const updatedItem = action.payload;
+                
+                if (!updatedItem) return;
+            
+                state.addressVerifications = state.addressVerifications.map((item) => {
+                    const itemUserId = item.user?._id || item.user;
+                    const updatedUserId = updatedItem.user?._id || updatedItem.userId || updatedItem.user;
+            
+                    const matches =
+                        item._id === updatedItem._id ||
+                        itemUserId === updatedUserId ||
+                        itemUserId === updatedItem._id;
+            
+                    return matches ? { ...item, ...updatedItem } : item;
+                });
+            })
+            .addCase(updateAddressVerificationStatus.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload as string;
+            })
+
+            // --- Update Withdrawal Status ---
             .addCase(updateWithdrawalStatus.pending, (state) => {
                 state.actionLoading = true;
                 state.error = null;
             })
             .addCase(updateWithdrawalStatus.fulfilled, (state, action) => {
                 state.actionLoading = false;
-                const resultData = action.payload;
+                const { withdrawal, adminCommission } = action.payload;
 
-                // Unpack the compound return payload if structured as { withdrawal, adminCommission }
-                const updatedWithdrawal = resultData?.withdrawal ? resultData.withdrawal : resultData;
+                state.withdrawals = state.withdrawals.map((item) =>
+                    item._id === withdrawal._id ? { ...item, ...withdrawal } : item
+                );
 
-                // Locate and swap modified subdocument references on layout index map
-                const index = state.withdrawals.findIndex((w) => w._id === updatedWithdrawal._id);
-                if (index !== -1) {
-                    state.withdrawals[index] = {
-                        ...state.withdrawals[index],
-                        ...updatedWithdrawal
-                    };
+                if (adminCommission) {
+                    state.commissions.unshift(adminCommission);
                 }
             })
             .addCase(updateWithdrawalStatus.rejected, (state, action) => {
@@ -269,14 +400,14 @@ const adminDataSlice = createSlice({
                 state.error = action.payload as string;
             })
 
-            // --- Dashboard Analytics Handling Pipeline ---
+            // --- Fetch Dashboard Stats ---
             .addCase(fetchDashboardStats.pending, (state) => {
                 state.statsLoading = true;
                 state.error = null;
             })
             .addCase(fetchDashboardStats.fulfilled, (state, action) => {
                 state.statsLoading = false;
-                state.stats = action.payload;
+                state.dashboardStats = action.payload;
             })
             .addCase(fetchDashboardStats.rejected, (state, action) => {
                 state.statsLoading = false;
@@ -285,5 +416,5 @@ const adminDataSlice = createSlice({
     },
 });
 
-export const { clearAdminErrors } = adminDataSlice.actions;
+export const { clearAdminError } = adminDataSlice.actions;
 export default adminDataSlice.reducer;

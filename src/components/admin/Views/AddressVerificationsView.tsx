@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchAdminData,
-  updateDriverStatus,
+  fetchAddressVerifications,
+  updateAddressVerificationStatus,
 } from "../../../api/slices/adminDataSlice";
 
-export const DriversView: React.FC = () => {
+export const AddressVerificationsView: React.FC = () => {
   const dispatch = useDispatch<any>();
 
   const {
-    driverSubmissions = [],
+    addressVerifications = [],
     loading,
     actionLoading,
     pagination,
@@ -19,93 +19,77 @@ export const DriversView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Modal State Management
+  // Modal State Management for Document View
   const [selectedImage, setSelectedImage] = useState<{
     url: string;
     title: string;
   } | null>(null);
 
+  // Modal State Management for Rejection
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean;
-    driverId: string | null;
-    status: "suspended" | "rejected" | null;
-    driverName: string;
+    userId: string | null;
+    userName: string;
   }>({
     isOpen: false,
-    driverId: null,
-    status: null,
-    driverName: "",
+    userId: null,
+    userName: "",
   });
 
   const [reasonInput, setReasonInput] = useState("");
 
   useEffect(() => {
     dispatch(
-      fetchAdminData({
-        collection: "driver-submissions",
+      fetchAddressVerifications({
         page: currentPage,
         limit: itemsPerPage,
       })
     );
   }, [dispatch, currentPage]);
 
-  const openStatusModal = (
-    id: string,
-    status: "suspended" | "rejected",
-    driverName: string
-  ) => {
+  const openRejectModal = (userId: string, userName: string) => {
     setReasonInput("");
     setStatusModal({
       isOpen: true,
-      driverId: id,
-      status,
-      driverName,
+      userId,
+      userName,
     });
   };
 
-  const handleConfirmStatusChange = async () => {
-    if (!statusModal.driverId || !statusModal.status) return;
-    if (!reasonInput.trim()) return;
+  const handleConfirmReject = async () => {
+    if (!statusModal.userId || !reasonInput.trim()) return;
 
     await dispatch(
-      updateDriverStatus({
-        id: statusModal.driverId,
-        status: statusModal.status,
+      updateAddressVerificationStatus({
+        userId: statusModal.userId,
+        status: "failed",
         rejectionReason: reasonInput.trim(),
       })
     );
 
     setStatusModal({
       isOpen: false,
-      driverId: null,
-      status: null,
-      driverName: "",
+      userId: null,
+      userName: "",
     });
     setReasonInput("");
   };
 
-  const handleApprove = (id: string) => {
-    dispatch(updateDriverStatus({ id, status: "approved" }));
+  const handleApprove = (userId: string) => {
+    dispatch(
+      updateAddressVerificationStatus({
+        userId,
+        status: "approved",
+      })
+    );
   };
 
-  const collectionPagination = pagination["driver-submissions"] || {
+  const collectionPagination = pagination["address-verifications"] || {
     total: 0,
     page: 1,
     count: 0,
   };
   const totalPages = Math.ceil(collectionPagination.total / itemsPerPage) || 1;
-
-  // Helper function to resolve profile image from all potential locations
-  const getDriverProfileImage = (driver: any): string | null => {
-    return (
-      driver.user?.profileImage ||
-      driver.user?.profilePicture ||
-      driver.verificationMeta?.driverVerification?.documents?.selfieUrl ||
-      driver.user?.verificationMeta?.driverVerification?.documents?.selfieUrl ||
-      driver.selfieUrl ||
-      null
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -113,15 +97,15 @@ export const DriversView: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5 border-b border-zinc-100">
         <div>
           <h2 className="text-xl font-bold text-zinc-900 tracking-tight">
-            Drivers Verification Registry
+            Address Verification Queue
           </h2>
           <p className="text-sm text-zinc-500">
-            Monitor active system operators, vehicle legal compliance, and
-            account statuses.
+            Review user proof of address, utility bill uploads, and location
+            verification statuses.
           </p>
         </div>
         <div className="text-xs bg-zinc-100 text-zinc-600 px-3 py-1.5 rounded-md font-medium">
-          Total Records: {collectionPagination.total}
+          Total Submissions: {collectionPagination.total}
         </div>
       </div>
 
@@ -138,9 +122,9 @@ export const DriversView: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200 text-xs font-semibold text-zinc-600 uppercase tracking-wider">
-                <th className="px-6 py-4">Driver Details</th>
-                <th className="px-6 py-4">Vehicle Identity</th>
-                <th className="px-6 py-4">License / Documents</th>
+                <th className="px-6 py-4">User Info</th>
+                <th className="px-6 py-4">Address Details</th>
+                <th className="px-6 py-4">Utility Bill Document</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Administrative Actions</th>
               </tr>
@@ -151,28 +135,28 @@ export const DriversView: React.FC = () => {
                   <td colSpan={5} className="text-center py-20 text-zinc-400">
                     <div className="flex items-center justify-center space-x-2">
                       <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin"></div>
-                      <span>Querying PadimanRoute secure ledger...</span>
+                      <span>Loading address verification records...</span>
                     </div>
                   </td>
                 </tr>
-              ) : driverSubmissions.length === 0 ? (
+              ) : addressVerifications.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-20 text-zinc-400">
-                    No registered platform drivers found.
+                    No pending or processed address verifications found.
                   </td>
                 </tr>
               ) : (
-                driverSubmissions.map((driver: any) => {
-                  const driverName =
-                    driver.user?.fullName || "Unknown Operator";
-                  const profileImg = getDriverProfileImage(driver);
+                addressVerifications.map((item: any) => {
+                  const userName = item.user?.fullName || "Unknown User";
+                  const profileImg = item.user?.profileImage;
+                  const userId = item.user?._id || item._id;
 
                   return (
                     <tr
-                      key={driver._id}
+                      key={item._id}
                       className="hover:bg-zinc-50/50 transition-colors"
                     >
-                      {/* User Details */}
+                      {/* User Info */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {profileImg ? (
@@ -182,178 +166,131 @@ export const DriversView: React.FC = () => {
                               onClick={() =>
                                 setSelectedImage({
                                   url: profileImg,
-                                  title: `${driverName} - Profile Image`,
+                                  title: `${userName} - Profile Image`,
                                 })
                               }
                               className="w-10 h-10 rounded-full object-cover border border-zinc-200 cursor-pointer hover:opacity-80 transition"
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-500 uppercase">
-                              {driverName.slice(0, 2)}
+                              {userName.slice(0, 2)}
                             </div>
                           )}
                           <div>
                             <div className="font-semibold text-zinc-900">
-                              {driverName}
+                              {userName}
                             </div>
                             <div className="text-xs text-zinc-500 mt-0.5">
-                              {driver.user?.email || "N/A"}
+                              {item.user?.email || "N/A"}
                             </div>
                             <div className="text-xs text-zinc-400 mt-0.5">
-                              {driver.user?.phone || "No Contact"}
+                              {item.user?.phone || "No Phone"}
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Vehicle Details */}
+                      {/* Address Details */}
                       <td className="px-6 py-4">
-                        <div className="text-zinc-800 font-medium">
-                          {driver.carDetails?.model
-                            ? `${driver.carDetails.model} (${
-                                driver.carDetails.year || "N/A"
-                              })`
-                            : "N/A"}
+                        <div className="text-zinc-800 font-medium max-w-xs">
+                          {item.address || "No address provided"}
                         </div>
-                        <div className="text-xs text-zinc-500 mt-0.5">
-                          Plate:{" "}
-                          <span className="font-mono bg-zinc-100 px-1 rounded text-zinc-700">
-                            {driver.carDetails?.licensePlate || "N/A"}
-                          </span>
-                        </div>
-                        {/* Sub-rendered Images Array Processing */}
-                        {driver.carImages && driver.carImages.length > 0 && (
-                          <div className="flex gap-1.5 mt-2">
-                            {driver.carImages.map((img: any) => (
-                              <button
-                                key={img._id || img.url}
-                                type="button"
-                                onClick={() =>
-                                  setSelectedImage({
-                                    url: img.url,
-                                    title: `${driverName} - Vehicle Image (${
-                                      img.description || "Car"
-                                    })`,
-                                  })
-                                }
-                                className="focus:outline-none"
-                              >
-                                <img
-                                  src={img.url}
-                                  alt="Car"
-                                  className="w-8 h-8 rounded bg-zinc-100 object-cover border border-zinc-200 hover:scale-105 transition-transform cursor-pointer"
-                                />
-                              </button>
-                            ))}
+                        {item.submittedAt && (
+                          <div className="text-xs text-zinc-400 mt-1">
+                            Submitted:{" "}
+                            {new Date(item.submittedAt).toLocaleDateString()}
                           </div>
                         )}
                       </td>
 
-                      {/* Documentation Tracking */}
-                      <td className="px-6 py-4 text-xs space-y-1.5">
-                        <div>
-                          <span className="text-zinc-400">License No:</span>{" "}
-                          <span className="font-mono text-zinc-700 block sm:inline font-semibold">
-                            {driver.driversLicense?.licenseNumber || "Missing"}
+                      {/* Utility Bill Document */}
+                      <td className="px-6 py-4 text-xs">
+                        {item.utilityBillUrl ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedImage({
+                                  url: item.utilityBillUrl,
+                                  title: `${userName} - Utility Bill Proof`,
+                                })
+                              }
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-100 border border-zinc-200 rounded-md text-zinc-700 hover:bg-zinc-200 transition font-medium cursor-pointer"
+                            >
+                              <span>View Utility Bill</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-zinc-400 italic">
+                            No document uploaded
                           </span>
-                        </div>
-                        {driver.driversLicense?.image && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedImage({
-                                url: driver.driversLicense.image,
-                                title: `${driverName} - License Image`,
-                              })
-                            }
-                            className="inline-flex items-center gap-1 text-blue-600 hover:underline font-medium cursor-pointer"
-                          >
-                            View License Image &rarr;
-                          </button>
                         )}
                       </td>
 
-                      {/* Dynamic Badges */}
+                      {/* Status */}
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                            driver.status === "approved"
+                            item.status === "approved"
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : driver.status === "suspended"
-                              ? "bg-amber-50 text-amber-700 border-amber-200"
-                              : driver.status === "rejected"
+                              : item.status === "failed" ||
+                                item.status === "rejected"
                               ? "bg-rose-50 text-rose-700 border-rose-200"
-                              : "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-amber-50 text-amber-700 border-amber-200"
                           }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                              driver.status === "approved"
+                              item.status === "approved"
                                 ? "bg-emerald-500"
-                                : driver.status === "suspended"
-                                ? "bg-amber-500"
-                                : driver.status === "rejected"
+                                : item.status === "failed" ||
+                                  item.status === "rejected"
                                 ? "bg-rose-500"
-                                : "bg-blue-500"
+                                : "bg-amber-500"
                             }`}
                           />
                           <span className="capitalize">
-                            {driver.status || "Pending Review"}
+                            {item.status === "approved"
+                              ? "Verified"
+                              : item.status === "failed" ||
+                                item.status === "rejected"
+                              ? "Failed"
+                              : "Pending Review"}
                           </span>
                         </span>
-                        {driver.rejectionReason && (
+                        {item.rejectionReason && (
                           <p
                             className="text-xs text-rose-600 mt-1 max-w-[180px] truncate"
-                            title={driver.rejectionReason}
+                            title={item.rejectionReason}
                           >
-                            Reason: {driver.rejectionReason}
+                            Reason: {item.rejectionReason}
                           </p>
                         )}
                       </td>
 
-                      {/* Row Administrative Action Buttons */}
+                      {/* Action Buttons */}
                       <td className="px-6 py-4 text-right">
                         <div
                           className="flex justify-end gap-2"
                           data-disabled={actionLoading}
                         >
-                          {driver.status !== "approved" && (
+                          {item.status !== "approved" && (
                             <button
                               disabled={actionLoading}
-                              onClick={() => handleApprove(driver._id)}
-                              className="px-2.5 py-1.5 bg-zinc-950 text-white rounded-md text-xs font-medium hover:bg-zinc-800 transition shadow-sm disabled:opacity-50"
+                              onClick={() => handleApprove(userId)}
+                              className="px-2.5 py-1.5 bg-zinc-950 text-white rounded-md text-xs font-medium hover:bg-zinc-800 transition shadow-sm disabled:opacity-50 cursor-pointer"
                             >
                               Approve
                             </button>
                           )}
-                          {driver.status !== "suspended" &&
-                            driver.status === "approved" && (
+                          {item.status !== "failed" &&
+                            item.status !== "rejected" && (
                               <button
                                 disabled={actionLoading}
                                 onClick={() =>
-                                  openStatusModal(
-                                    driver._id,
-                                    "suspended",
-                                    driverName
-                                  )
+                                  openRejectModal(userId, userName)
                                 }
-                                className="px-2.5 py-1.5 bg-white text-amber-700 border border-amber-200 rounded-md text-xs font-medium hover:bg-amber-50 transition disabled:opacity-50"
-                              >
-                                Suspend
-                              </button>
-                            )}
-                          {driver.status !== "rejected" &&
-                            driver.status !== "approved" && (
-                              <button
-                                disabled={actionLoading}
-                                onClick={() =>
-                                  openStatusModal(
-                                    driver._id,
-                                    "rejected",
-                                    driverName
-                                  )
-                                }
-                                className="px-2.5 py-1.5 bg-white text-rose-600 border border-rose-200 rounded-md text-xs font-medium hover:bg-rose-50 transition disabled:opacity-50"
+                                className="px-2.5 py-1.5 bg-white text-rose-600 border border-rose-200 rounded-md text-xs font-medium hover:bg-rose-50 transition disabled:opacity-50 cursor-pointer"
                               >
                                 Reject
                               </button>
@@ -368,7 +305,7 @@ export const DriversView: React.FC = () => {
           </table>
         </div>
 
-        {/* Dynamic Pagination Footer */}
+        {/* Pagination Footer */}
         <div className="bg-zinc-50 border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
           <div className="text-xs text-zinc-500">
             Showing Page{" "}
@@ -381,7 +318,7 @@ export const DriversView: React.FC = () => {
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1 || loading}
-              className="px-3 py-1.5 border border-zinc-200 rounded-md bg-white text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition"
+              className="px-3 py-1.5 border border-zinc-200 rounded-md bg-white text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition cursor-pointer"
             >
               Previous
             </button>
@@ -390,7 +327,7 @@ export const DriversView: React.FC = () => {
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages || loading}
-              className="px-3 py-1.5 border border-zinc-200 rounded-md bg-white text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition"
+              className="px-3 py-1.5 border border-zinc-200 rounded-md bg-white text-xs font-medium text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition cursor-pointer"
             >
               Next
             </button>
@@ -398,7 +335,7 @@ export const DriversView: React.FC = () => {
         </div>
       </div>
 
-      {/* Image Preview Modal */}
+      {/* Document Modal */}
       {selectedImage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
@@ -414,7 +351,7 @@ export const DriversView: React.FC = () => {
               </h3>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="text-zinc-400 hover:text-zinc-600 text-lg font-bold px-2 rounded-lg"
+                className="text-zinc-400 hover:text-zinc-600 text-lg font-bold px-2 rounded-lg cursor-pointer"
               >
                 &times;
               </button>
@@ -433,23 +370,22 @@ export const DriversView: React.FC = () => {
                 rel="noreferrer"
                 className="text-xs text-blue-600 hover:underline font-medium"
               >
-                Open original image &rarr;
+                Open full resolution document &rarr;
               </a>
             </div>
           </div>
         </div>
       )}
 
-      {/* Action (Suspend / Reject) Modal */}
+      {/* Reject Reason Modal */}
       {statusModal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           onClick={() =>
             setStatusModal({
               isOpen: false,
-              driverId: null,
-              status: null,
-              driverName: "",
+              userId: null,
+              userName: "",
             })
           }
         >
@@ -458,17 +394,13 @@ export const DriversView: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div>
-              <h3 className="text-lg font-bold text-zinc-900 capitalize">
-                {statusModal.status} Driver Account
+              <h3 className="text-lg font-bold text-zinc-900">
+                Reject Address Verification
               </h3>
               <p className="text-xs text-zinc-500 mt-1">
-                Please provide a reason for setting{" "}
+                Please provide a reason for declining address verification for{" "}
                 <span className="font-semibold text-zinc-700">
-                  {statusModal.driverName}
-                </span>{" "}
-                to status:{" "}
-                <span className="uppercase font-semibold text-amber-600">
-                  {statusModal.status}
+                  {statusModal.userName}
                 </span>
                 .
               </p>
@@ -482,7 +414,7 @@ export const DriversView: React.FC = () => {
                 rows={3}
                 value={reasonInput}
                 onChange={(e) => setReasonInput(e.target.value)}
-                placeholder={`Type the reason why this driver is being ${statusModal.status}...`}
+                placeholder="Type reason (e.g. Utility bill name does not match user account)..."
                 className="w-full text-sm p-2.5 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900"
               />
             </div>
@@ -493,32 +425,21 @@ export const DriversView: React.FC = () => {
                 onClick={() =>
                   setStatusModal({
                     isOpen: false,
-                    driverId: null,
-                    status: null,
-                    driverName: "",
+                    userId: null,
+                    userName: "",
                   })
                 }
-                className="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition"
+                className="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 disabled={!reasonInput.trim() || actionLoading}
-                onClick={handleConfirmStatusChange}
-                className={`px-4 py-2 text-white rounded-lg text-xs font-medium transition disabled:opacity-50 ${
-                  statusModal.status === "suspended"
-                    ? "bg-amber-600 hover:bg-amber-700"
-                    : "bg-rose-600 hover:bg-rose-700"
-                }`}
+                onClick={handleConfirmReject}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition disabled:opacity-50 cursor-pointer"
               >
-                {actionLoading
-                  ? "Updating..."
-                  : `Confirm ${
-                      statusModal.status === "suspended"
-                        ? "Suspension"
-                        : "Rejection"
-                    }`}
+                {actionLoading ? "Updating..." : "Confirm Rejection"}
               </button>
             </div>
           </div>

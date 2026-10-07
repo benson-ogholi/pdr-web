@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Truck,
   Wrench,
@@ -11,15 +11,18 @@ import {
 } from "lucide-react";
 
 /**
- * Internal product directory — restyled for a clean, white, professional
- * surface. QR codes are rendered via the public qrserver.com image API
- * (no extra dependency / build step needed) so each card is scannable
- * straight to its Play Store listing.
+ * Updated Product Directory — now supports website URLs + Play Store URLs.
  *
- * Descriptions are written from each product's own site metadata, not
- * generic marketing copy — Padiman Route has no public Play Store
- * listing yet (only a console dashboard was provided), so that card
- * shows "Not yet published" instead of a broken QR code.
+ * NEW: Click any URL (Website or Play Store) to instantly copy it to clipboard.
+ * Shows a tiny "Copied!" toast for 1.5 seconds.
+ *
+ * How to use:
+ * 1. Paste your website URL in the "website" field.
+ * 2. If the app is on Play Store, paste the full Play Store URL in "playStoreUrl".
+ * 3. (Optional) Add consoleUrl if you have one.
+ *
+ * Description and features are taken directly from your original product data.
+ * QR code still works via public qrserver.com API (no extra deps).
  */
 
 interface Product {
@@ -150,6 +153,17 @@ const products: Product[] = [
 ];
 
 export default function ProductDirectory() {
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const handleCopy = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      setTimeout(() => setCopied(null), 1500);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white p-4 text-slate-900 sm:p-8">
@@ -157,8 +171,7 @@ export default function ProductDirectory() {
         {/* Header */}
         <header className="space-y-3 mt-24 border-b border-slate-100 pb-8 text-center sm:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Apps
-            Overview
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Apps Overview
           </div>
           <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
             Products
@@ -225,17 +238,23 @@ export default function ProductDirectory() {
 
               {/* Footer: identifiers, console, store + QR */}
               <div className="mt-6 space-y-3 border-t border-slate-100 pt-5">
-           
-
-
                 {/* Website */}
                 <a
                   href={item.website}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleCopy(item.website, "Website");
+                  }}
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 cursor-pointer"
                 >
                   Website <ExternalLink className="h-3 w-3 text-slate-400" />
+                  {copied === "Website" && (
+                    <span className="ml-1 text-emerald-600 text-xs font-medium">
+                      Copied!
+                    </span>
+                  )}
                 </a>
 
                 {/* Play Store — large scan panel */}
@@ -244,7 +263,11 @@ export default function ProductDirectory() {
                     href={item.playStoreUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-[#f4f4f4] p-5 text-center text-white transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleCopy(item.playStoreUrl!, "Play Store");
+                    }}
+                    className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-[#f4f4f4] p-5 text-center text-white transition-colors cursor-pointer"
                   >
                     <img
                       src={qrSrc(item.playStoreUrl)}
@@ -263,6 +286,11 @@ export default function ProductDirectory() {
                         Or open listing <ExternalLink className="h-2.5 w-2.5" />
                       </p>
                     </div>
+                    {copied === "Play Store" && (
+                      <span className="mt-2 text-emerald-600 text-xs font-medium">
+                        Copied!
+                      </span>
+                    )}
                   </a>
                 ) : (
                   <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center text-slate-400">
@@ -284,6 +312,16 @@ export default function ProductDirectory() {
           ))}
         </div>
       </div>
+
+      {/* Toast */}
+      {copied && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-medium text-white shadow-lg transition-all">
+          <CheckCircle2 className="h-4 w-4" />
+          {copied === "Website"
+            ? "Website link copied"
+            : "Play Store link copied"}
+        </div>
+      )}
     </div>
   );
 }

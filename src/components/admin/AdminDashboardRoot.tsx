@@ -2,6 +2,7 @@ import { useState } from "react";
 import { UsersView } from "./Views/UsersView";
 import { AdminLayout } from "./Layout/AdminLayout";
 import { DriversView } from "./Views/DriverApplicationsView";
+import { AddressVerificationsView } from "./Views/AddressVerificationsView";
 import { PaymentsView } from "./Views/PaymentsView";
 import { WithdrawalsView } from "./Views/WithdrawalsView";
 import { DashboardOverview } from "./Views/DashboardOverview";
@@ -10,14 +11,11 @@ import { RequestsView } from "./Views/RequestsView";
 
 export const AdminDashboardRoot = () => {
   const [currentView, setView] = useState("overview");
+
   const renderViewContent = () => {
     switch (currentView) {
       case "overview":
-        return (
-          <>
-            <DashboardOverview />
-          </>
-        );
+        return <DashboardOverview />;
 
       case "users":
         return <UsersView />;
@@ -25,12 +23,18 @@ export const AdminDashboardRoot = () => {
       case "driver-applications":
         return <DriversView />;
 
+      case "address-verifications":
+        return <AddressVerificationsView />;
+
       case "requests":
         return <RequestsView />;
+
       case "payments":
         return <PaymentsView />;
+
       case "commissions":
         return <CommissionsView />;
+
       case "withdrawals":
         return <WithdrawalsView />;
 

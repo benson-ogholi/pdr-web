@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Users,
@@ -17,13 +17,16 @@ import { fetchDashboardStats } from "../../../api/slices/adminDataSlice";
 
 export const DashboardOverview = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { stats, statsLoading, error } = useSelector(
+  const { dashboardStats, statsLoading, error } = useSelector(
     (state: RootState) => state.adminData
   );
 
   useEffect(() => {
     dispatch(fetchDashboardStats());
   }, [dispatch]);
+
+  // Console log payload for debugging inspection
+  console.log("Dashboard Stats Payload:", dashboardStats);
 
   const formatCurrency = (amount: number) => {
     if (!amount) return "₦0";
@@ -45,7 +48,7 @@ export const DashboardOverview = () => {
     );
   }
 
-  if (error || !stats) {
+  if (error || !dashboardStats) {
     return (
       <div className="h-[70vh] flex flex-col items-center justify-center text-rose-600 border border-dashed border-rose-200 rounded-2xl bg-rose-50/30 p-6">
         <AlertCircle size={32} className="mb-2" />
@@ -59,7 +62,7 @@ export const DashboardOverview = () => {
     );
   }
 
-  const { systemCounters, financialSummaries, charts } = stats;
+  const { systemCounters, financialSummaries, charts } = dashboardStats;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -80,10 +83,10 @@ export const DashboardOverview = () => {
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <span className="text-xs font-semibold text-zinc-400 tracking-wider uppercase">
-                Admin Commission Earned{" "}
+                Admin Commission Earned
               </span>
               <h2 className="text-3xl font-mono font-bold tracking-tight">
-                {formatCurrency(financialSummaries.adminCommissionEarned)}
+                {formatCurrency(financialSummaries?.adminCommissionEarned)}
               </h2>
             </div>
             <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl text-emerald-400">
@@ -95,7 +98,7 @@ export const DashboardOverview = () => {
             <span>
               From{" "}
               <span className="text-zinc-200 font-semibold">
-                {financialSummaries.totalPaymentsProcessed}
+                {financialSummaries?.totalPaymentsProcessed || 0}
               </span>{" "}
               validated gateway collection captures
             </span>
@@ -109,7 +112,7 @@ export const DashboardOverview = () => {
                 Driver Balances in Escrow
               </span>
               <h2 className="text-2xl font-mono font-bold text-zinc-900">
-                {formatCurrency(financialSummaries.driverWalletBalancesEscrow)}
+                {formatCurrency(financialSummaries?.driverWalletBalancesEscrow)}
               </h2>
             </div>
             <div className="p-3 bg-zinc-50 border border-zinc-100 rounded-xl text-zinc-600">
@@ -119,7 +122,7 @@ export const DashboardOverview = () => {
           <div className="mt-5 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
             <span>Pending Payout Queue:</span>
             <span className="font-mono font-bold text-amber-600">
-              {formatCurrency(financialSummaries.pendingPayoutsInQueue)}
+              {formatCurrency(financialSummaries?.pendingPayoutsInQueue)}
             </span>
           </div>
         </div>
@@ -131,7 +134,7 @@ export const DashboardOverview = () => {
                 Settled Driver Payouts
               </span>
               <h2 className="text-2xl font-mono font-bold text-zinc-900">
-                {formatCurrency(financialSummaries.successfulPayoutsSettled)}
+                {formatCurrency(financialSummaries?.successfulPayoutsSettled)}
               </h2>
             </div>
             <div className="p-3 bg-zinc-50 border border-zinc-100 rounded-xl text-zinc-600">
@@ -141,33 +144,33 @@ export const DashboardOverview = () => {
           <div className="mt-5 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
             <span>Invoiced Volume Overall:</span>
             <span className="font-mono font-medium text-zinc-800">
-              {formatCurrency(financialSummaries.grossVolumeInvoiced)}
+              {formatCurrency(financialSummaries?.grossVolumeInvoiced)}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 3. Operational Performance Counter Grid Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* 3. Operational Performance Counter Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           {
             label: "Active Users",
-            val: systemCounters.users,
+            val: systemCounters?.users || 0,
             icon: Users,
             color: "text-blue-600",
           },
           {
             label: "Verified Drivers",
-            val: systemCounters.activeDrivers,
+            val: systemCounters?.activeDrivers || 0,
             icon: Car,
             color: "text-indigo-600",
           },
           {
             label: "Pending Apps",
-            val: systemCounters.pendingDriverApplications,
+            val: systemCounters?.pendingDriverSubmissions || 0,
             icon: Layers,
             color: "text-amber-600",
-            alert: systemCounters.pendingDriverApplications > 0,
+            alert: (systemCounters?.pendingDriverSubmissions || 0) > 0,
           },
         ].map((c, i) => (
           <div
@@ -203,9 +206,9 @@ export const DashboardOverview = () => {
             </p>
           </div>
 
-          {/* Core CSS Scaled Vector Path Simulation Map */}
           <div className="h-44 w-full flex items-end justify-between pt-4 relative group">
-            {charts.historicalThirtyDayRevenue?.length === 0 ? (
+            {!charts?.historicalThirtyDayRevenue ||
+            charts.historicalThirtyDayRevenue.length === 0 ? (
               <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-400 italic">
                 Insufficient continuous time-series data to plot vector.
               </div>
@@ -232,7 +235,6 @@ export const DashboardOverview = () => {
                         style={{ height: `${Math.max(calculatedPct, 6)}%` }}
                         className="w-full bg-zinc-900 group-hover/bar:bg-zinc-700 transition-all rounded-t-[3px] shadow-sm relative"
                       >
-                        {/* Interactive Floating Hover Popover Frame */}
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-zinc-950 text-white text-[10px] font-mono rounded-md px-2 py-1 opacity-0 group-hover/bar:opacity-100 transition-all pointer-events-none whitespace-nowrap z-10 shadow-lg">
                           <p className="font-bold">
                             {formatCurrency(item.revenue)}
@@ -260,19 +262,20 @@ export const DashboardOverview = () => {
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-bold text-zinc-900">
-                Negotiations Conversion Conversion
+                Negotiations Conversion
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
                 Asks versus service offers matching success rate parameters.
               </p>
             </div>
 
-            {/* Circular Percentage Dial Widget Context */}
             <div className="flex items-center justify-center py-4">
               <div className="relative w-28 h-28 flex items-center justify-center rounded-full bg-zinc-50 ring-4 ring-zinc-100 border border-zinc-200">
                 <div className="text-center space-y-0.5">
                   <h4 className="text-xl font-black text-zinc-950 tracking-tight font-mono">
-                    {charts.negotiationComparisonMetrics.successRatePercentage}%
+                    {charts?.negotiationComparisonMetrics
+                      ?.successRatePercentage || 0}
+                    %
                   </h4>
                   <span className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 block">
                     Match Rate
@@ -289,13 +292,13 @@ export const DashboardOverview = () => {
                 <span>Total Channels Handled:</span>
               </div>
               <span className="font-bold text-zinc-900 font-mono">
-                {charts.negotiationComparisonMetrics.totalNegotiationsCount}
+                {charts?.negotiationComparisonMetrics
+                  ?.totalNegotiationsCount || 0}
               </span>
             </div>
 
-            {/* Status Segment Loops map */}
             <div className="flex flex-wrap gap-2 pt-1">
-              {charts.negotiationComparisonMetrics.statusBreakdown.map(
+              {charts?.negotiationComparisonMetrics?.statusBreakdown?.map(
                 (item, key) => (
                   <span
                     key={key}
